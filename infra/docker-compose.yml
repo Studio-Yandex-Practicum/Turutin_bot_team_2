@@ -30,7 +30,7 @@ services:
   telegram-bot:
     build:
       context: ../
-      dockerfile: infra/Dockerfile-telegram
+      dockerfile: infra/../src/bot_app/Dockerfile-telegram
     environment:
       - DATABASE_ASYNC_URL=${DATABASE_ASYNC_URL}
       - PYTHONPATH=/app/src

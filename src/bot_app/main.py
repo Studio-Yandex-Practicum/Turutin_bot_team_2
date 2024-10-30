@@ -10,7 +10,7 @@ from telegram.ext import (
     filters,
 )
 
-from bot import (
+from .bot import (
     error_handler,
     handle_message,
     handle_my_applications,
@@ -19,7 +19,7 @@ from bot import (
     start,
     start_new_survey,
 )
-from config import BOT_TOKEN
+from .config import BOT_TOKEN
 
 
 def init_bot() -> TelegramApplication:

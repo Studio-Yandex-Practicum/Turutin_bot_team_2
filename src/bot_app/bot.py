@@ -5,9 +5,9 @@ from sqlalchemy.orm import selectinload
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from buttons import request_contact_keyboard, start_keyboard
-from config import logger
-from database import get_async_db_session
+from .buttons import request_contact_keyboard, start_keyboard
+from .config import logger
+from .database import get_async_db_session
 from models import Application, ApplicationStatus, Question, User
 
 
