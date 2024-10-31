@@ -5,10 +5,11 @@ from sqlalchemy.orm import selectinload
 from telegram import Update
 from telegram.ext import CallbackContext
 
+from models.models import Application, ApplicationStatus, Question, User
+
 from .buttons import request_contact_keyboard, start_keyboard
 from .config import logger
 from .database import get_async_db_session
-from models import Application, ApplicationStatus, Question, User
 
 
 async def get_questions() -> list[dict]:
@@ -17,8 +18,9 @@ async def get_questions() -> list[dict]:
         result = await session.execute(select(Question)
                                        .order_by(Question.number))
         questions = result.scalars().all()
-        return [{'number': q.number, 'question':
-            q.question} for q in questions]
+        return [
+            {'number': q.number, 'question': q.question} for q in questions
+        ]
 
 
 async def save_user_to_db(
@@ -96,7 +98,6 @@ async def process_application(
         )
         context.user_data['awaiting_contact'] = True
 
-        # Сохранение заявки в базе данных
         async with get_async_db_session() as session:
             result = await session.execute(
                 select(ApplicationStatus).filter_by(status='открыта'),
@@ -140,7 +141,6 @@ async def handle_contact_info(
                 user_record.phone = contact_info
             await session.commit()
 
-            # Сброс данных
             context.user_data['awaiting_contact'] = False
             context.user_data['answers'] = []
             context.user_data['current_question'] = 0
@@ -159,7 +159,6 @@ async def start_new_survey(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
 
-    # Сброс ответов и параметров для нового опроса
     context.user_data['answers'] = []
     context.user_data['current_question'] = 0
 
@@ -222,7 +221,6 @@ async def handle_my_applications(update: Update,
     applications_text = "Ваши заявки:\n"
 
     async with get_async_db_session() as session:
-        # Получаем все заявки пользователя с загруженными статусами
         result = await session.execute(
             select(Application)
             .filter_by(user_id=user_id)

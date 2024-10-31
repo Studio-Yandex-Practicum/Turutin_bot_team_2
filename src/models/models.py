@@ -57,7 +57,7 @@ class User(Base):
 
     __tablename__ = 'users'
 
-    id = Column(String, primary_key=True, nullable=False)  # ID из Telegram
+    id = Column(String, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
     email = Column(String, unique=True)
     phone = Column(String)
@@ -89,14 +89,13 @@ class Application(Base):
         ),
         nullable=False,
     )
-    answers = Column(String, nullable=False)  # Ответы клиента на вопросы
+    answers = Column(String, nullable=False)
 
     user = relationship('User', back_populates='applications')
     status = relationship('ApplicationStatus', back_populates='applications')
     comments = relationship('ApplicationComment', back_populates='application')
 
     def __repr__(self) -> str:
-        # Отображаем имя пользователя и статус вместо объектов
         user_name = self.user.name if self.user else 'Unknown User'
         status_text = self.status.status if self.status else 'Unknown Status'
         return (f"Application(user='{user_name}', status='{status_text}', "
@@ -163,9 +162,9 @@ class ApplicationComment(Base):
             name='fk_application_comments_operator_id_admin_users',
         ),
         nullable=False,
-    )  # ID оператора, который оставил комментарий
-    comment = Column(String, nullable=True)  # Может быть пустым
-    timestamp = Column(DateTime, default=func.now())  # Время создания
+    )
+    comment = Column(String, nullable=True)
+    timestamp = Column(DateTime, default=func.now())
 
     application = relationship('Application', back_populates='comments')
     operator = relationship('AdminUser', back_populates='operator_comments')
@@ -178,5 +177,5 @@ class Question(Base):
     __tablename__ = 'questions'
 
     id = Column(Integer, primary_key=True)
-    number = Column(Integer, nullable=False)  # Порядок вопросов
+    number = Column(Integer, nullable=False)
     question = Column(String, nullable=False)
