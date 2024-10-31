@@ -4,7 +4,8 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Копируем весь код в контейнер
-COPY ./src/bot_app /app/
+COPY ./src/bot_app /app
+COPY ./src/models.py /app/models.py
 
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements-telegram.txt
