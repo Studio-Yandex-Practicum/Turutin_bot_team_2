@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+# Создаем в контейнере директорию /app
+WORKDIR /app
+
+# Копируем весь код в контейнер
+COPY ./src/bot_app /app
+COPY ./src/models.py /app/models.py
+
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir -r requirements-telegram.txt
+
+# Устанавливаем команду запуска
+CMD ["python", "main.py"]
