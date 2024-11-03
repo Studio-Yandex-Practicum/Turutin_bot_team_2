@@ -6,9 +6,12 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    func,
+    func, select,
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, Session
+from sqlalchemy import event
+
+ #from bot import send_status_change_notification
 
 Base = declarative_base()
 
@@ -101,6 +104,21 @@ class Application(Base):
         status_text = self.status.status if self.status else 'Unknown Status'
         return (f"Application(user='{user_name}', status='{status_text}', "
                 f"answers='{self.answers}')")
+
+
+@event.listens_for(Session, 'before_flush')
+def log_status_change(session, flush_context, instances):
+    for instance in session.dirty:
+        if isinstance(instance, Application):
+            old_status = session.query(ApplicationStatus).get(instance.status_id).status
+            new_status = instance.status.status
+            if old_status != new_status:
+                log_entry = ApplicationCheckStatus(
+                    application_id=instance.id,
+                    old_status=old_status,
+                    new_status=new_status,
+                )
+                session.add(log_entry)
 
 
 class ApplicationStatus(Base):

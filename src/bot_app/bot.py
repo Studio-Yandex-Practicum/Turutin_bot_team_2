@@ -1,18 +1,32 @@
 import logging
 
+from sqlalchemy import event
+
 from buttons import start_keyboard
 from database import get_async_db_session
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, Session
 from telegram import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Update,
 )
+from telegram.ext import (
+    Application as TelegramApplication,
+)
 from telegram.ext import CallbackContext
 
-from models import Application, ApplicationStatus, Question, User
+from models import Application, ApplicationStatus, Question, User, ApplicationCheckStatus
+
+from config import BOT_TOKEN
+
+#application = TelegramApplication.builder().token(BOT_TOKEN).build()
+#bot=TelegramApplication.builder().token(BOT_TOKEN).build()
+
+#def send_status_change_notification(user_id, old_status, new_status):
+ #   message = f"Ваша заявка сменила статус с '{old_status}' на '{new_status}'."
+  #  bot.send_message(chat_id=user_id, text=message)
 
 
 async def get_questions() -> list[dict]:
