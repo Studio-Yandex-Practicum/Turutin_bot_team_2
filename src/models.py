@@ -143,6 +143,7 @@ class ApplicationCheckStatus(Base):
 
     @property
     def user_name(self):
+        """Получает имя пользователя."""
         return self.user.name if self.user else None
 
 
