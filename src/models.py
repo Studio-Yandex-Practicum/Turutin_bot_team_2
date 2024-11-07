@@ -142,7 +142,7 @@ class ApplicationCheckStatus(Base):
     user = relationship("User", secondary="applications", viewonly=True)
 
     @property
-    def user_name(self):
+    def user_name(self) -> str:
         """Получает имя пользователя."""
         return self.user.name if self.user else None
 
