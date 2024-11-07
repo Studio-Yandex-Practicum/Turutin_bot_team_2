@@ -138,7 +138,12 @@ class ApplicationCheckStatus(Base):
     )
     old_status = Column(String, nullable=False)
     new_status = Column(String, nullable=False)
-    timestamp = Column(DateTime, default=func.now())
+    timestamp = Column(DateTime, default=func.date_trunc('minute', func.now()))
+    user = relationship("User", secondary="applications", viewonly=True)
+
+    @property
+    def user_name(self):
+        return self.user.name if self.user else None
 
 
 class Question(Base):
