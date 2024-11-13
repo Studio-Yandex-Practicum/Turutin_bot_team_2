@@ -88,10 +88,12 @@ class User(Base):
     applications = relationship(
         'Application',
         back_populates='user',
+        cascade='all, delete',
     )
     block_history = relationship(
         'CheckIsBlocked',
         back_populates='user',
+        cascade='all, delete',
     )
 
     def __repr__(self) -> str:
@@ -131,10 +133,16 @@ class Application(Base):
     user = relationship(
         'User',
         back_populates='applications',
+        cascade='all, delete',
     )
     status = relationship(
         'ApplicationStatus',
         back_populates='applications',
+    )
+    check_status = relationship(
+        'ApplicationCheckStatus',
+        back_populates='application',
+        cascade='all, delete',
     )
     timestamp = Column(
         DateTime(timezone=True),
@@ -179,8 +187,11 @@ class ApplicationCheckStatus(Base, TimestampMixin):
     new_status = Column(String, nullable=False)
     changed_by = Column(String, nullable=False)
 
-    user = relationship("User", secondary="applications",
-                        viewonly=True)
+    application = relationship(
+        'Application',
+        back_populates='check_status',
+        overlaps="check_status",
+    )
 
 
 class Question(Base):
