@@ -1,5 +1,7 @@
+import sys
 from typing import Optional
 
+sys.path.append('/app')
 import flask_admin as admin
 import flask_login as login
 

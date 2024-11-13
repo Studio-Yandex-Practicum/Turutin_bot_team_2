@@ -4,6 +4,11 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext import associationproxy
+
+associationproxy.ASSOCIATION_PROXY = (
+    associationproxy.AssociationProxyExtensionType.ASSOCIATION_PROXY
+)
 
 load_dotenv()
 
