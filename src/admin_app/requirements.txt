@@ -4,8 +4,8 @@ Flask-Migrate==3.1.0
 Flask-Login==0.6.2
 Flask_WTF==1.2.2
 WTForms==3.0.1
-SQLAlchemy==1.4.48
-Flask-SQLAlchemy==3.0.0
+SQLAlchemy==2.0.36
+Flask-SQLAlchemy==3.1.1
 psycopg2-binary==2.9.5
 alembic==1.10.0
 python-dotenv==0.19.0
