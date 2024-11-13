@@ -88,10 +88,12 @@ class User(Base):
     applications = relationship(
         'Application',
         back_populates='user',
+        cascade='all, delete',
     )
     block_history = relationship(
         'CheckIsBlocked',
         back_populates='user',
+        cascade='all, delete',
     )
 
     def __repr__(self) -> str:
@@ -136,9 +138,15 @@ class Application(Base):
         'ApplicationStatus',
         back_populates='applications',
     )
+
     timestamp = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(pytz.timezone('Europe/Moscow')),
+    )
+
+    check_status = relationship(
+        'ApplicationCheckStatus',
+        cascade='all, delete',
     )
 
 
@@ -181,6 +189,11 @@ class ApplicationCheckStatus(Base, TimestampMixin):
 
     user = relationship("User", secondary="applications",
                         viewonly=True)
+    application = relationship(
+        'Application',
+        back_populates='check_status',
+        overlaps='check_status',
+    )
 
 
 class Question(Base):

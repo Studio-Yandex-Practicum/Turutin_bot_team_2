@@ -13,7 +13,7 @@ else
     flask db upgrade
 
     # Добавление начальных данных
-    flask create_superuser hix 1
+    flask create_superuser admin 4%?Wf1bK71amg
     flask create_questions
     flask create_statuses
 fi
