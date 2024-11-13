@@ -1,3 +1,4 @@
+import sys
 from typing import Optional
 
 import flask_admin as admin
@@ -22,6 +23,8 @@ from .admin_views import (
     QuestionModelView,
     UserModelView,
 )
+
+sys.path.append('/app')
 
 
 def init_login() -> None:
