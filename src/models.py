@@ -193,7 +193,6 @@ class ApplicationCheckStatus(Base, TimestampMixin):
     new_status = Column(String, nullable=False)
     changed_by = Column(String, nullable=False)
 
-
     application = relationship(
         'Application',
         back_populates='check_status',
