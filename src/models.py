@@ -133,12 +133,18 @@ class Application(Base):
     user = relationship(
         'User',
         back_populates='applications',
+        cascade='all, delete',
     )
     status = relationship(
         'ApplicationStatus',
         back_populates='applications',
     )
 
+    check_status = relationship(
+        'ApplicationCheckStatus',
+        back_populates='application',
+        cascade='all, delete',
+    )
     timestamp = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(pytz.timezone('Europe/Moscow')),
@@ -187,12 +193,11 @@ class ApplicationCheckStatus(Base, TimestampMixin):
     new_status = Column(String, nullable=False)
     changed_by = Column(String, nullable=False)
 
-    user = relationship("User", secondary="applications",
-                        viewonly=True)
+
     application = relationship(
         'Application',
         back_populates='check_status',
-        overlaps='check_status',
+        overlaps="check_status",
     )
 
 

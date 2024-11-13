@@ -157,6 +157,7 @@ pull_request в ветку master вашего репозитория запус
 Чтобы создать администратора, необходимо выполнить комнду:
 ```shell
 docker compose -f docker-compose.production.yml exec -it admin flask create_superuser user password
+```
 Также можно зайти в работающий контейнер с администированием и там выполнить команду
 ```shell
 flask create_superuser <имя пользователя> <пароль пользователя>
