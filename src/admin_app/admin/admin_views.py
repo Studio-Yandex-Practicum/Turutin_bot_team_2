@@ -61,10 +61,7 @@ class CustomAdminIndexView(admin.AdminIndexView):
 
 class CustomModelView(ModelView):
 
-    """Класс представления вкладок, доступных только авторизованным.
-
-    пользователям.
-    """
+    """Вкладки, доступные только авторизованным пользователям."""
 
     def is_accessible(self) -> Response:
         """Проверяет авторизован ли пользователь."""
@@ -111,9 +108,11 @@ class AdminUserModelView(SuperModelView):
     column_labels = {
         'login': 'Логин',
         'password': 'Пароль',
+        'email': 'Электронная почта',
         'role': 'Роль',
     }
-    form_columns = ('login', 'password', 'role')
+    form_columns = ('login', 'password', 'email', 'role')
+    column_sortable_list = ('login', 'password', 'email', 'role')
 
 
 class UserModelView(SuperModelView):
@@ -130,6 +129,7 @@ class UserModelView(SuperModelView):
     }
     form_columns = ('id', 'name', 'email', 'phone', 'is_blocked')
     column_editable_list = ['is_blocked']
+    column_searchable_list = ['id']
 
 
 class ApplicationModelView(CustomModelView):
@@ -158,7 +158,8 @@ class ApplicationModelView(CustomModelView):
             'widget': Select2Field(),
         },
     }
-    column_editable_list = ['status', 'comment']
+    column_editable_list = ('status', 'comment')
+    column_sortable_list = ('id', 'answers', 'status', 'comment')
 
 
 class AppCheckStatusModelView(CustomModelView):
@@ -166,17 +167,23 @@ class AppCheckStatusModelView(CustomModelView):
     """Класс представления для модели ApplicationCheckStatus."""
 
     column_list = (
-        'id', 'application_id', 'old_status', 'new_status', 'timestamp',
+        'application_id', 'old_status', 'new_status',
+        'timestamp', 'changed_by',
     )
     column_labels = {
-        'id': 'Номер в журнале',
         'application_id': 'Номер заявки',
         'old_status': 'Старый статус',
         'new_status': 'Новый статус',
         'timestamp': 'Дата изменений',
+        'changed_by': 'Изменил',
     }
     form_columns = (
         'application_id', 'old_status', 'new_status', 'timestamp',
+        'changed_by',
+    )
+    column_sortable_list = (
+        'application_id', 'old_status', 'new_status',
+        'timestamp', 'changed_by',
     )
 
 
@@ -188,3 +195,24 @@ class QuestionModelView(SuperModelView):
         'number': 'Номер',
         'question': 'Вопрос',
     }
+
+
+class CheckIsBlockedModelView(SuperModelView):
+
+    """Класс представления для модели CheckIsBlocked."""
+
+    column_list = (
+        'id', 'user_id', 'name', 'email',
+        'phone', 'timestamp',
+    )
+    column_labels = {
+        'id': 'Номер',
+        'user_id': 'ID пользователя',
+        'name': 'Имя',
+        'email': 'Почта',
+        'phone': 'Телефон',
+        'timestamp': 'Дата блокировки',
+    }
+    column_sortable_list = (
+        'id', 'user_id', 'name', 'email', 'phone', 'timestamp',
+    )

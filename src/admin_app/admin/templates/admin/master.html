@@ -1,0 +1,115 @@
+{% extends 'admin/base.html' %}
+
+{% block head_css %}
+    {{ super() }}
+    <style>
+        /* Стили для уведомлений */
+        .notification {
+            position: fixed;
+            top: 7%;
+            left: 50%;
+            transform: translate(-50%, -7%);
+            padding: 15px;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            z-index: 1000;
+            opacity: 0.9;
+            animation: fadeIn 0.5s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Анимация появления уведомления */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Стили для кнопки закрытия */
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: white;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .notification-close:hover {
+            color: #ffeb3b; /* Желтый цвет при наведении */
+        }
+    </style>
+{% endblock %}
+
+{% block access_control %}
+{% if current_user.is_authenticated %}
+<div class="dropdown show">
+  <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="icon-user"></i> {{ current_user.login }} <span class="caret"></span>
+  </a>
+
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+    <a class="btn" href="{{ url_for('admin.logout_view') }}">Выйти</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block tail_js %}
+    {{ super() }}
+    {% if current_user.is_authenticated %}
+    <script>
+        // Периодическая проверка наличия новых заявок
+        function checkForNewApplications() {
+            fetch('/api/new_applications')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.new_applications > 0) {
+                        // Показываем всплывающее сообщение, если есть новые заявки
+                        showNotification('Появилась новая заявка!');
+                    }
+                })
+                .catch(error => console.error('Ошибка при запросе новых заявок:', error));
+        }
+
+        // Функция для показа уведомления
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+
+            // Создание текста уведомления
+            const messageText = document.createElement('span');
+            messageText.textContent = message;
+            notification.appendChild(messageText);
+
+            // Создание кнопки для закрытия уведомления
+            const closeButton = document.createElement('button');
+            closeButton.className = 'notification-close';
+            closeButton.textContent = '×';  // Символ крестика
+            closeButton.onclick = () => {
+                notification.remove();  // Удаляем уведомление при клике на крестик
+            };
+            notification.appendChild(closeButton);
+
+            document.body.appendChild(notification);
+        }
+
+        // Проверяем новые заявки каждые 10 секунд
+        setInterval(checkForNewApplications, 10000);
+        // Кнопка "Поиск" по ID телеграма
+        document.addEventListener("DOMContentLoaded", function() {
+            const searchButton = document.querySelector('button[type="submit"]:not([value="Search"])');
+            if (searchButton) {
+                searchButton.textContent = 'Поиск';
+            }
+        });
+    </script>
+    {% endif %}
+{% endblock %}

@@ -1,4 +1,4 @@
-![Build Status](https://github.com/Studio-Yandex-Practicum/Turutin_bot_team_2/actions/workflows/main.yml/badge.svg)
+![Build Status](https://github.com/Studio-Yandex-Practicum/Turutin_bot_team_2/actions/workflows/main.yml/badge.svg?branch=master)
 
 [Развёрнутый проект](https://turutin-team2.rsateam.ru)
 
@@ -45,6 +45,7 @@ src/
 │   ├── cli_commands.py
 │   ├── forms.py
 │   ├── utils.py
+│   ├── start.sh
 │   └── views.py
 └── bot_app/
 │   ├── bot.py
@@ -72,11 +73,20 @@ src/
 * `templates/admin/index.html` — Главная страница админки.
 * `templates/admin/my_master.html` — Пользовательский шаблон.
 * `admin.py` — Основная логика для админки.
-* `admin_views.py` — Вьюхи для обработки запросов.
+* `admin_views.py` — Отображения таблиц базы данных.
 * `cli_commands.py` — Команды CLI для административных задач.
 * `forms.py` — Формы для работы с данными.
 * `utils.py` — Утилиты для вспомогательных операций.
 * `views.py` — Отображения данных в админке.
+
+##### start.sh
+Этот скрипт изпользуется для старта административной зоны на Gunicorn,
+используя 4 дочерних процесса. 4 человека могут параллельно работать в административной панели.
+Скрипт устанавливает связь с моделями приложения для миграций Alebmic.
+
+* При первом запуске инициализарует, проводит и применяет миграции, наполняет базу данными для работы, запускает контейнер.
+
+* При последующих запусках обновляет базу и запускает контейнер.
 
 #### bot_app/
 
@@ -100,8 +110,25 @@ src/
 ### Запуск проекта
 
 #### CI/CD
+Форкнуть репозиторий в свой GitHub и склонировать его.
+Добавить следующие secrets в settings своего репозитория:
+ - DOCKER_PASSWORD - пароль вашего Dockerhub
+ - DOCKER_USERNAME - логин вашего Dockerhub
+ - HOST - IP-адрес удаленного сервера
+ - SSH_KEY - ключ для SSH подключения
+ - SSH_PASSPHRASE - кодовая фраза (пароль) для SSH-ключа
+ - SSH_PRIVATE_KEY - закрытый SSH-ключ
+ - USER - логин на удаленном сервере
 
-Для развертывания проекта через CI/CD, используйте файл `docker-compose.production.yml` в директории `infra/`. Это позволит вам автоматизировать процесс развертывания и управления проектом в облачной инфраструктуре.
+pull_request в ветку master вашего репозитория запустит процесс CI/CD.
+
+В директории на сервере - куда вы будете проихводить деплой, должен находиться `.env` файл (пример в `.env.example`) с необходимыми переменными окружения.
+Можно использовать все данные из `.env.example`, только изменить `BOT_TOKEN`.
+Сценарий в `docker-compose.production.yml` разворачивает 3 контейнера:
+
+ - Базу данныйх (SQLAlchemy, PostgreSQL)
+ - Административное приложение (Flask-admin)
+ - Tekegram-бота на асинхронном коде (python-telegram-bot, SQLAlchemy)
 
 #### Локальный запуск с Docker Compose
 
@@ -113,7 +140,28 @@ src/
 
 #### Создание суперпользователя
 
-Для создания суперпользователя используйте команду: `docker exec -it infra-admin-1 flask create_superuser user password`
+Для создания суперпользователя используйте команду: `docker exec -it admin flask create_superuser user password`
+
+#### Запуск с Docker Compose на сервере в ручном режиме
+
+На вашем серевере должны быть установлены Docker и Docker-compose.
+При ручном запуске необходимо смотреть логи, названия компонентов docker в сети, чтобы правильно включить сеть.
+
+1. Создайте файл `.env` в корне и настройте переменные окружения(`.env.example`).
+2. Убедитесь, что в переменной `BOT_TOKEN` указан токен вашего бота.
+3. Находясь в директории с файлом `.env` создайте файл `docker-compose.yml`.
+4. Скопируйте содержимое `docker-compose.production.yml` в `docker-compose.yml`.
+5. `docker compose up -d` - для запуска.
+
+В `docker-compose.production.yml` прописаны все инструкции для запуска сети.
+Чтобы создать администратора, необходимо выполнить комнду:
+```shell
+docker compose -f docker-compose.production.yml exec -it admin flask create_superuser user password
+```
+Также можно зайти в работающий контейнер с администированием и там выполнить команду
+```shell
+flask create_superuser <имя пользователя> <пароль пользователя>
+```
 
 ### Стилистика
 

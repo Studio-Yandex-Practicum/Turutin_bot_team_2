@@ -1,6 +1,9 @@
 import asyncio
 import os
+from datetime import datetime
 
+import flask_login as login
+import pytz
 from dotenv import load_dotenv
 from sqlalchemy import (
     Boolean,
@@ -12,14 +15,27 @@ from sqlalchemy import (
     String,
     Text,
     event,
-    func,
 )
 from sqlalchemy.orm import Session, declarative_base, relationship
 from telegram import Bot
 
 load_dotenv()
 
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+
 Base = declarative_base()
+
+
+class TimestampMixin:
+
+    """Задаёт формат даты."""
+
+    timestamp = Column(
+        String,
+        default=lambda: datetime.now(
+            pytz.timezone('Europe/Moscow'),
+        ).strftime('%H:%M %d.%m.%Y'),
+    )
 
 
 class AdminUser(Base):
@@ -31,6 +47,7 @@ class AdminUser(Base):
     id = Column(Integer, primary_key=True)
     login = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False)
+    email = Column(String, unique=True)
     role = Column(
         Enum('admin', 'operator', name='admin_role_enum'),
         default='admin',
@@ -68,14 +85,26 @@ class User(Base):
     phone = Column(String)
     is_blocked = Column(Boolean, default=False)
 
-    applications = relationship('Application', back_populates='user')
+    applications = relationship(
+        'Application',
+        back_populates='user',
+        cascade="all, delete",
+    )
+    block_history = relationship(
+        'CheckIsBlocked',
+        back_populates='user',
+        cascade="all, delete",
+    )
 
     def __repr__(self) -> str:
+        """Отображает контактные данные из базы."""
+        contact_info = []
         if self.phone:
-            return (f'{self.name}, '
-                    f'телефон: {self.phone}')
-        return (f'{self.name}, '
-                f'эл. почта: {self.email}')
+            contact_info.append(self.phone)
+        if self.email:
+            contact_info.append(self.email)
+        contact_info_str = ', '.join(contact_info)
+        return f'{self.name}, {contact_info_str}'
 
 
 class Application(Base):
@@ -88,7 +117,6 @@ class Application(Base):
     user_id = Column(
         String,
         ForeignKey('users.id', name='fk_applications_user_id_users'),
-        nullable=False,
     )
     status_id = Column(
         Integer,
@@ -96,19 +124,27 @@ class Application(Base):
             'statuses.id',
             name='fk_applications_status_id_statuses',
         ),
-        nullable=False,
     )
     answers = Column(Text, nullable=False)
     comment = Column(String)
 
-    user = relationship('User', back_populates='applications')
-    status = relationship('ApplicationStatus', back_populates='applications')
-
-    def __repr__(self) -> str:
-        user_name = self.user.name if self.user else 'Unknown User'
-        status_text = self.status.status if self.status else 'Unknown Status'
-        return (f"Application(user='{user_name}', status='{status_text}', "
-                f"answers='{self.answers}')")
+    user = relationship(
+        'User',
+        back_populates='applications',
+    )
+    status = relationship(
+        'ApplicationStatus',
+        back_populates='applications',
+    )
+    timestamp = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(pytz.timezone('Europe/Moscow')),
+    )
+    check_statuses = relationship(
+        'ApplicationCheckStatus',
+        backref='application',
+        cascade="all, delete",
+    )
 
 
 class ApplicationStatus(Base):
@@ -129,7 +165,7 @@ class ApplicationStatus(Base):
         return f"{self.status}"
 
 
-class ApplicationCheckStatus(Base):
+class ApplicationCheckStatus(Base, TimestampMixin):
 
     """Модель логов изменений статусов заявок."""
 
@@ -146,19 +182,10 @@ class ApplicationCheckStatus(Base):
     )
     old_status = Column(String, nullable=False)
     new_status = Column(String, nullable=False)
-    timestamp = Column(
-        DateTime,
-        default=func.date_trunc(
-            'minute',
-            func.timezone('Europe/Moscow', func.now()),
-        ),
-    )
-    user = relationship("User", secondary="applications", viewonly=True)
+    changed_by = Column(String, nullable=False)
 
-    @property
-    def user_name(self) -> str:
-        """Получает имя пользователя."""
-        return self.user.name if self.user else None
+    user = relationship("User", secondary="applications",
+                        viewonly=True)
 
 
 class Question(Base):
@@ -172,7 +199,36 @@ class Question(Base):
     question = Column(String, nullable=False)
 
 
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+class CheckIsBlocked(Base, TimestampMixin):
+
+    """Модель истории блокировок пользователей."""
+
+    __tablename__ = 'check_blocked'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(
+        String,
+        ForeignKey('users.id', name='fk_check_blocked_user_id_users'),
+    )
+    user = relationship(
+        'User',
+        back_populates='block_history',
+    )
+
+    @property
+    def name(self) -> None:
+        """Получить имя пользователя."""
+        return self.user.name if self.user else None
+
+    @property
+    def email(self) -> None:
+        """Получить email пользователя."""
+        return self.user.email if self.user else None
+
+    @property
+    def phone(self) -> None:
+        """Получить телефон пользователя."""
+        return self.user.phone if self.user else None
 
 
 async def notify_user(user_id: int, application_id: int, old_status: str,
@@ -193,10 +249,15 @@ async def log_status_change(session: Session, flush_context: any,
             new_status = instance.status.status
 
             if old_status != new_status:
+                admin_user = session.query(AdminUser).get(
+                    login.current_user.id)
+                admin_nickname = admin_user.login
+
                 log_entry = ApplicationCheckStatus(
                     application_id=instance.id,
                     old_status=old_status,
                     new_status=new_status,
+                    changed_by=admin_nickname,
                 )
                 session.add(log_entry)
 
@@ -215,3 +276,15 @@ def before_flush_handler(session: Session, flush_context: any,
     else:
         loop.run_until_complete(log_status_change(session, flush_context,
                                                   instances))
+
+
+@event.listens_for(User.is_blocked, 'set')
+def user_blocked_listener(target: User, value: bool,
+                          oldvalue: bool, initiator: any) -> None:
+    """Отражает заблокированного клиента в разделе 'История блокировок'."""
+    if value and not oldvalue:
+        session = Session.object_session(target)
+        if session is not None:
+            new_block_record = CheckIsBlocked(user_id=target.id)
+            session.add(new_block_record)
+            session.commit()

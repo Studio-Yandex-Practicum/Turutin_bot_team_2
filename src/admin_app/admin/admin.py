@@ -7,6 +7,7 @@ from models import (
     AdminUser,
     Application,
     ApplicationCheckStatus,
+    CheckIsBlocked,
     Question,
     User,
 )
@@ -16,6 +17,7 @@ from .admin_views import (
     AdminUserModelView,
     AppCheckStatusModelView,
     ApplicationModelView,
+    CheckIsBlockedModelView,
     CustomAdminIndexView,
     QuestionModelView,
     UserModelView,
@@ -33,10 +35,8 @@ def init_login() -> None:
         return db.session.query(AdminUser).get(user_id)
 
 
-# Инициализация системы работы с пользователями
 init_login()
 
-# Инициализация админки
 admin = admin.Admin(
     app,
     name='Turutin Bot',
@@ -45,11 +45,12 @@ admin = admin.Admin(
     base_template='my_master.html',
 )
 
-# Добавление моделей в админку
-admin.add_view(AdminUserModelView(AdminUser, db.session,
-                                  name='Сотрудники'))
 admin.add_view(UserModelView(User, db.session, name='Клиенты'))
 admin.add_view(ApplicationModelView(Application, db.session, name='Заявки'))
 admin.add_view(AppCheckStatusModelView(ApplicationCheckStatus, db.session,
                                        name='Журнал заявок'))
+admin.add_view(CheckIsBlockedModelView(CheckIsBlocked, db.session,
+                                       name='Журнал блокировок'))
 admin.add_view(QuestionModelView(Question, db.session, name='Вопросы'))
+admin.add_view(AdminUserModelView(AdminUser, db.session,
+                                  name='Сотрудники'))

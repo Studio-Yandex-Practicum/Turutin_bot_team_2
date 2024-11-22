@@ -1,32 +1,15 @@
-# Основные зависимости здесь
-
-# Flask
 Flask==2.3.2
 Flask-Admin==1.6.0
 Flask-Migrate==3.1.0
 Flask-Login==0.6.2
 Flask_WTF==1.2.2
-
 WTForms==3.0.1
-
-# SQLAlchemy
-SQLAlchemy==1.4.48  # Версия, совместимая с Flask-SQLAlchemy 3.0.0
+SQLAlchemy==1.4.48
 Flask-SQLAlchemy==3.0.0
-
-# PostgreSQL
 psycopg2-binary==2.9.5
-
-# Alembic для миграций
 alembic==1.10.0
-
-# Python-dotenv
 python-dotenv==0.19.0
-
-# Gunicorn
 gunicorn==23.0.0
-
-# werkzeug
 werkzeug==2.3.7
-
-# python-telegram-bot
 python-telegram-bot[Bot]==21.1
+pytz==2024.2

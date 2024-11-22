@@ -9,20 +9,15 @@ from alembic.migration import MigrationContext
 from alembic.script import Script
 from flask import current_app
 
-# Импортируем Base и метаданные
-from models import Base  # Импортируем ваш Base из models
+from models import Base
 
-# Alembic Config объект, который предоставляет доступ к значениям из файла .ini
 config = context.config
 
-# Настройка логирования
 fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
 
-# Добавляем метаданные для автогенерации
-target_metadata = Base.metadata  # Установите target_metadata для автогенерации
+target_metadata = Base.metadata
 
-# Устанавливаем URL базы данных
 config.set_main_option(
     'sqlalchemy.url',
     str(

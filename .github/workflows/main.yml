@@ -1,7 +1,7 @@
 name: deploy
 
 on:
-  pull_request:
+  push:
     branches:
       - master
 
@@ -89,4 +89,4 @@ jobs:
             docker compose -f docker-compose.production.yml pull
             docker compose -f docker-compose.production.yml down
             docker compose -f docker-compose.production.yml up -d
-            docker system prune -a
+            docker system prune -a -f
